@@ -1,295 +1,85 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#101827">
-  <title>Meu Ponto</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #101827;
-      color: #f1f5f9;
-      font-family: Arial, sans-serif;
-    }
-    main { max-width: 600px; margin: auto; }
-    h1 { margin-bottom: 5px; color: #60a5fa; }
-    .sub { color: #aab6c8; margin-top: 0; }
-    .card {
-      background: #1c283a;
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 18px;
-      margin: 18px 0;
-    }
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .stat {
-      background: #101827;
-      padding: 14px;
-      border-radius: 10px;
-    }
-    .stat small { display: block; color: #aab6c8; }
-    .stat strong { display: block; font-size: 23px; margin-top: 8px; }
-    label { display: block; margin: 15px 0 7px; }
-    input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #475569;
-      background: #101827;
-      color: white;
-      font-size: 16px;
-    }
-    button {
-      width: 100%;
-      border: 0;
-      border-radius: 9px;
-      padding: 13px;
-      margin-top: 14px;
-      background: #3b82f6;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button.secondary { background: #475569; }
-    button.delete { background: #991b1b; width: auto; padding: 8px 12px; }
-    .record {
-      border-top: 1px solid #475569;
-      padding: 13px 0;
-    }
-    .record p { margin: 6px 0; color: #cbd5e1; }
-    .positive { color: #4ade80; }
-    .negative { color: #f87171; }
-    .muted { color: #aab6c8; font-size: 13px; }
-    #message { margin-top: 12px; }
-  </style>
-</head>
-<body>
-<main>
-  <h1>Meu Ponto</h1>
-  <p class="sub">Controle de jornada e banco de horas</p>
-
-  <section class="card">
-    <div class="stats">
-      <div class="stat">
-        <small>Saldo do banco</small>
-        <strong id="balance">0h 00min</strong>
-      </div>
-      <div class="stat">
-        <small>Dias de folga disponíveis</small>
-        <strong id="days">0</strong>
-      </div>
-    </div>
-    <p class="muted">Cada dia trabalhado considera 1 hora de almoço.
-      A jornada diária prevista é de 8 horas.</p>
-  </section>
-
-  <section class="card">
-    <h2>Registrar jornada</h2>
-
-    <label for="date">Data</label>
-    <input id="date" type="date">
-
-    <label for="entry">Horário de entrada</label>
-    <input id="entry" type="time" value="08:00">
-
-    <label for="exit">Horário de saída</label>
-    <input id="exit" type="time" value="17:00">
-
-    <button id="save">Salvar jornada</button>
-    <p id="message" role="status"></p>
-    <p class="muted">Se você salvar outra jornada na mesma data,
-      o registro anterior será substituído.</p>
-  </section>
-
-  <section class="card">
-    <h2>Histórico</h2>
-    <div id="history"></div>
-    <button class="secondary" id="export">Exportar backup (.json)</button>
-    <p class="muted">Guarde o arquivo de backup em local seguro.
-      Ele ainda não é uma sincronização com o Google Drive.</p>
-  </section>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827">
+<title>Meu Ponto</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:20px;background:#101827;color:#f1f5f9;font-family:Arial,sans-serif}main{max-width:620px;margin:auto}h1{color:#60a5fa;margin-bottom:5px}.sub,.muted{color:#aab6c8}.card{background:#1c283a;border:1px solid #334155;border-radius:14px;padding:18px;margin:18px 0}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#101827;padding:14px;border-radius:10px}.stat small{display:block;color:#aab6c8}.stat strong{display:block;font-size:23px;margin-top:8px}label{display:block;margin:15px 0 7px}input{width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px}button{width:100%;border:0;border-radius:9px;padding:13px;margin-top:12px;background:#3b82f6;color:white;font-size:16px;font-weight:bold}button.secondary{background:#475569}button.danger{background:#991b1b;width:auto;padding:8px 12px}.record{border-top:1px solid #475569;padding:13px 0}.record p{margin:6px 0;color:#cbd5e1}.positive{color:#4ade80!important}.negative{color:#f87171!important}.muted{font-size:13px;line-height:1.45}#message{line-height:1.4;overflow-wrap:anywhere}
+</style><script src="https://accounts.google.com/gsi/client" async defer></script>
+</head><body><main>
+<h1>Meu Ponto</h1><p class="sub">Controle de jornada e banco de horas</p>
+<section class="card"><div class="stats"><div class="stat"><small>Saldo do banco</small><strong id="balance">0h 00min</strong></div><div class="stat"><small>Dias de folga disponíveis</small><strong id="days">0</strong></div></div><p class="muted">Jornada prevista: 8 horas líquidas por dia. O cálculo desconta automaticamente 1 hora de almoço.</p></section>
+<section class="card"><h2>Sincronização com Google Drive</h2><p id="driveStatus">Não conectado ao Google Drive.</p><button id="connectDrive">Conectar ao Google Drive</button><button class="secondary" id="syncDrive">Sincronizar agora</button><p class="muted">Conecte a mesma conta Google em cada aparelho e sincronize. Os registros também ficam salvos localmente no navegador. O acesso ao Drive é solicitado pelo Google; nenhum segredo OAuth fica neste código público.</p></section>
+<section class="card"><h2>Registrar jornada</h2><label for="date">Data</label><input id="date" type="date"><label for="entry">Horário de entrada</label><input id="entry" type="time" value="08:00"><label for="exit">Horário de saída</label><input id="exit" type="time" value="17:00"><button id="save">Salvar jornada</button><p id="message" role="status"></p><p class="muted">Se salvar outra jornada na mesma data, o registro anterior será substituído.</p></section>
+<section class="card"><h2>Histórico</h2><div id="history"></div><button class="secondary" id="export">Exportar backup (.json)</button></section>
 </main>
-
 <script>
-(() => {
-  const STORAGE_KEY = "meuPontoRegistrosV1";
-  const $ = id => document.getElementById(id);
-
-  let records = [];
-
-  try {
-    records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    if (!Array.isArray(records)) records = [];
-  } catch {
-    records = [];
-  }
-
-  const today = new Date();
-  const localDate = [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, "0"),
-    String(today.getDate()).padStart(2, "0")
-  ].join("-");
-  $("date").value = localDate;
-
-  function minutesFromTime(value) {
-    const parts = value.split(":").map(Number);
-    return parts[0] * 60 + parts[1];
-  }
-
-  function formatMinutes(total) {
-    const sign = total < 0 ? "-" : "";
-    const absolute = Math.abs(total);
-    const hours = Math.floor(absolute / 60);
-    const minutes = absolute % 60;
-    return `${sign}${hours}h ${String(minutes).padStart(2, "0")}min`;
-  }
-
-  function workedMinutes(record) {
-    let difference =
-      minutesFromTime(record.exit) - minutesFromTime(record.entry);
-
-    // Permite jornada que atravessa a meia-noite.
-    if (difference < 0) difference += 24 * 60;
-
-    // Desconto automático de uma hora de almoço.
-    return difference - 60;
-  }
-
-  function balanceMinutes() {
-    return records.reduce(
-      (total, record) => total + workedMinutes(record) - 480,
-      0
-    );
-  }
-
-  function saveStorage() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  }
-
-  function render() {
-    const balance = balanceMinutes();
-    $("balance").textContent = formatMinutes(balance);
-    $("balance").className = balance < 0 ? "negative" : "positive";
-    $("days").textContent = Math.floor(Math.max(0, balance) / 480);
-
-    const history = $("history");
-    history.replaceChildren();
-
-    const ordered = [...records].sort((a, b) =>
-      b.date.localeCompare(a.date)
-    );
-
-    if (ordered.length === 0) {
-      const empty = document.createElement("p");
-      empty.textContent = "Nenhuma jornada registrada.";
-      history.appendChild(empty);
-      return;
-    }
-
-    ordered.forEach(record => {
-      const worked = workedMinutes(record);
-      const difference = worked - 480;
-      const item = document.createElement("div");
-      item.className = "record";
-
-      const title = document.createElement("strong");
-      title.textContent = record.date.split("-").reverse().join("/");
-      item.appendChild(title);
-
-      const times = document.createElement("p");
-      times.textContent =
-        `Entrada: ${record.entry} | Saída: ${record.exit}`;
-      item.appendChild(times);
-
-      const total = document.createElement("p");
-      total.textContent = `Trabalhado: ${formatMinutes(worked)}`;
-      item.appendChild(total);
-
-      const saldo = document.createElement("p");
-      saldo.textContent = `Variação do dia: ${formatMinutes(difference)}`;
-      saldo.className = difference < 0 ? "negative" : "positive";
-      item.appendChild(saldo);
-
-      const remove = document.createElement("button");
-      remove.className = "delete";
-      remove.textContent = "Excluir";
-      remove.addEventListener("click", () => {
-        if (!confirm(`Excluir a jornada de ${record.date}?`)) return;
-        records = records.filter(r => r.date !== record.date);
-        saveStorage();
-        render();
-      });
-      item.appendChild(remove);
-      history.appendChild(item);
-    });
-  }
-
-  $("save").addEventListener("click", () => {
-    const date = $("date").value;
-    const entry = $("entry").value;
-    const exit = $("exit").value;
-
-    if (!date || !entry || !exit) {
-      $("message").textContent = "Preencha a data, a entrada e a saída.";
-      return;
-    }
-
-    const difference = minutesFromTime(exit) - minutesFromTime(entry);
-    if (difference === 0) {
-      $("message").textContent =
-        "Entrada e saída não podem ser iguais.";
-      return;
-    }
-
-    if (difference < 0 && minutesFromTime(exit) > minutesFromTime(entry)) {
-      $("message").textContent = "Confira os horários informados.";
-      return;
-    }
-
-    const record = { date, entry, exit };
-    const existing = records.findIndex(r => r.date === date);
-
-    if (existing >= 0) {
-      records[existing] = record;
-    } else {
-      records.push(record);
-    }
-
-    try {
-      saveStorage();
-      render();
-      $("message").textContent = "Jornada salva com sucesso!";
-    } catch {
-      $("message").textContent =
-        "Não foi possível salvar os dados neste navegador.";
-    }
-  });
-
-  $("export").addEventListener("click", () => {
-    const blob = new Blob(
-      [JSON.stringify(records, null, 2)],
-      { type: "application/json" }
-    );
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "meu-ponto-backup.json";
-    link.click();
-    URL.revokeObjectURL(url);
-  });
-
-  render();
+(()=>{'use strict';
+const CLIENT_ID='37942245083-122eh9crtamuhgcnql93m6bjg9indqf4.apps.googleusercontent.com',KEY='meuPontoRegistrosV1',FILE='meu-ponto-dados.json',SCOPE='https://www.googleapis.com/auth/drive.file';
+const $=id=>document.getElementById(id);let records=[],token=null,tokenClient=null,driveFileId=null;
+try{records=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(records))records=[]}catch(e){records=[]}
+const d=new Date();$('date').value=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+function mins(t){let p=t.split(':').map(Number);return p[0]*60+p[1]}
+function fmt(n){let s=n<0?'-':'',a=Math.abs(n);return `${s}${Math.floor(a/60)}h ${String(a%60).padStart(2,'0')}min`}
+function worked(r){let n=mins(r.exit)-mins(r.entry);if(n<0)n+=1440;return n-60}
+function balance(){return records.reduce((n,r)=>n+worked(r)-480,0)}
+function store(){localStorage.setItem(KEY,JSON.stringify(records))}
+function render(){
+ let b=balance();$('balance').textContent=fmt(b);$('balance').className=b<0?'negative':'positive';$('days').textContent=Math.floor(Math.max(0,b)/480);
+ let h=$('history');h.replaceChildren();let sorted=[...records].sort((a,b)=>b.date.localeCompare(a.date));
+ if(!sorted.length){let p=document.createElement('p');p.textContent='Nenhuma jornada registrada.';h.appendChild(p);return}
+ sorted.forEach(r=>{let el=document.createElement('div');el.className='record';let title=document.createElement('strong');title.textContent=r.date.split('-').reverse().join('/');el.appendChild(title);
+ let t=document.createElement('p');t.textContent=`Entrada: ${r.entry} | Saída: ${r.exit}`;el.appendChild(t);
+ let w=document.createElement('p');w.textContent=`Trabalhado: ${fmt(worked(r))}`;el.appendChild(w);
+ let v=worked(r)-480,p=document.createElement('p');p.textContent=`Variação do dia: ${fmt(v)}`;p.className=v<0?'negative':'positive';el.appendChild(p);
+ let x=document.createElement('button');x.className='danger';x.textContent='Excluir';x.onclick=()=>{if(confirm(`Excluir a jornada de ${r.date}?`)){records=records.filter(a=>a.date!==r.date);store();render();msg('Registro excluído. Sincronize para atualizar o Drive.')}};el.appendChild(x);h.appendChild(el)})
+}
+function msg(s){$('message').textContent=s}
+function status(s){$('driveStatus').textContent=s}
+function getClient(){
+ if(!window.google?.accounts?.oauth2)throw Error('O login do Google ainda está carregando. Aguarde alguns segundos e tente novamente.');
+ if(!tokenClient)tokenClient=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPE,callback:async r=>{
+  if(r.error){status('Não foi possível conectar ao Google Drive.');msg('Erro de autorização: '+r.error);return}
+  token=r.access_token;status('Conectado ao Google Drive nesta sessão.');$('connectDrive').textContent='Reconectar ao Google Drive';
+  try{await syncDrive()}catch(e){msg('Conectado, mas houve erro: '+e.message)}
+ },error_callback:e=>msg('A autorização não abriu: '+(e.message||e.type||'tente novamente.'))});
+ return tokenClient
+}
+function connect(){try{getClient().requestAccessToken({prompt:'consent'})}catch(e){msg(e.message)}}
+async function request(url,options={}){
+ if(!token)throw Error('Conecte ao Google Drive primeiro.');
+ let r=await fetch(url,{...options,headers:{...(options.headers||{}),Authorization:'Bearer '+token}});
+ if(!r.ok){let detail='';try{detail=(await r.json()).error.message||''}catch(e){}if(r.status===401)token=null;throw Error(detail||`Erro do Google Drive (${r.status}).`)}
+ if(r.status===204)return null;return r.json()
+}
+async function findFile(){
+ let q=encodeURIComponent(`name='${FILE}' and trashed=false`),r=await request(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id,name,modifiedTime)&pageSize=100`);
+ let fs=r.files||[];return fs.sort((a,b)=>(b.modifiedTime||'').localeCompare(a.modifiedTime||''))[0]||null
+}
+async function upload(fileId){
+ let boundary='----MeuPontoBoundary'+Date.now(),meta={name:FILE,mimeType:'application/json'},data={version:1,updatedAt:new Date().toISOString(),records};
+ let body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+'\r\n--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(data)+'\r\n--'+boundary+'--';
+ let url=fileId?`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(fileId)}?uploadType=multipart`:'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+ let result=await request(url,{method:fileId?'PATCH':'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body});driveFileId=result.id||fileId
+}
+async function syncDrive(){
+ if(!token)throw Error('Toque em “Conectar ao Google Drive” e autorize o acesso.');
+ status('Sincronizando com o Google Drive…');let file=await findFile();
+ if(file){
+  driveFileId=file.id;let cloud=await request(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(file.id)}?alt=media`);
+  let cloudRecords=Array.isArray(cloud)?cloud:(cloud.records||[]);if(!Array.isArray(cloudRecords))throw Error('O arquivo do Drive não contém jornadas válidas.');
+  let map=new Map(records.map(r=>[r.date,r]));cloudRecords.forEach(r=>{if(r&&r.date&&r.entry&&r.exit)map.set(r.date,r)});
+  records=[...map.values()].sort((a,b)=>a.date.localeCompare(b.date));store();await upload(file.id);status('Sincronização concluída. Dados locais e do Drive foram combinados.');msg('Sincronização com o Google Drive concluída.')
+ }else{await upload(null);status('Backup criado no seu Google Drive.');msg('Primeiro backup criado no Google Drive.')}
+ render()
+}
+$('connectDrive').onclick=connect;
+$('syncDrive').onclick=async()=>{try{await syncDrive()}catch(e){status('Sincronização não concluída.');msg(e.message)}};
+$('save').onclick=()=>{let date=$('date').value,entry=$('entry').value,exit=$('exit').value;if(!date||!entry||!exit){msg('Preencha data, entrada e saída.');return}if(entry===exit){msg('Entrada e saída não podem ser iguais.');return}
+ let r={date,entry,exit},i=records.findIndex(x=>x.date===date);if(i>=0)records[i]=r;else records.push(r);
+ try{store();render();msg('Jornada salva neste aparelho. Para fazer backup, sincronize com o Google Drive.')}catch(e){msg('Não foi possível salvar neste navegador.')}
+};
+$('export').onclick=()=>{let blob=new Blob([JSON.stringify({version:1,records},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='meu-ponto-backup.json';a.click();URL.revokeObjectURL(url)};
+render()
 })();
-</script>
-</body>
-</html>
+</script></body></html>
