@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101827">
 <title>Meu Ponto</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 <style>
 *{box-sizing:border-box}body{margin:0;padding:20px;background:#101827;color:#f1f5f9;font-family:Arial,sans-serif}main{max-width:620px;margin:auto}h1{color:#60a5fa;margin-bottom:5px}.sub,.muted{color:#aab6c8}.card{background:#1c283a;border:1px solid #334155;border-radius:14px;padding:18px;margin:18px 0}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#101827;padding:14px;border-radius:10px}.stat small{display:block;color:#aab6c8}.stat strong{display:block;font-size:23px;margin-top:8px}label{display:block;margin:15px 0 7px}input{width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px}button{width:100%;border:0;border-radius:9px;padding:13px;margin-top:12px;background:#3b82f6;color:white;font-size:16px;font-weight:bold}button.secondary{background:#475569}button.danger{background:#991b1b;width:auto;padding:8px 12px}.record{border-top:1px solid #475569;padding:13px 0}.record p{margin:6px 0;color:#cbd5e1}.positive{color:#4ade80!important}.negative{color:#f87171!important}.muted{font-size:13px;line-height:1.45}#message{line-height:1.4;overflow-wrap:anywhere}
 </style><script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -86,4 +93,12 @@ $('save').onclick=()=>{let date=$('date').value,entry=$('entry').value,exit=$('e
 $('export').onclick=()=>{let blob=new Blob([JSON.stringify({version:1,records},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='meu-ponto-backup.json';a.click();URL.revokeObjectURL(url)};
 render()
 })();
-</script></body></html>
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+\n</body></html>
