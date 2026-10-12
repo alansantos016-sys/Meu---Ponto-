@@ -45,7 +45,8 @@ function getClient(){
  },error_callback:e=>msg('A autorização não abriu: '+(e.message||e.type||'tente novamente.'))});
  return tokenClient
 }
-function connect(){try{getClient().requestAccessToken({prompt:'consent'})}catch(e){msg(e.message)}}
+// Alteração: não força a tela de consentimento em toda conexão.
+function connect(){try{getClient().requestAccessToken()}catch(e){msg(e.message)}}
 async function request(url,options={}){
  if(!token)throw Error('Conecte ao Google Drive primeiro.');
  let r=await fetch(url,{...options,headers:{...(options.headers||{}),Authorization:'Bearer '+token}});
