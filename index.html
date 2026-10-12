@@ -56,7 +56,8 @@ function getClient(){
 function connect(){try{getClient().requestAccessToken()}catch(e){msg(e.message)}}
 // Ao abrir ou atualizar a página, tenta recuperar o acesso sem abrir a escolha de conta.
 // Se o Google exigir interação, o usuário poderá tocar no botão Conectar.
-window.addEventListener('load',()=>{try{getClient().requestAccessToken({prompt:''})}catch(e){status('Toque em “Conectar ao Google Drive” para autorizar.')}});
+// A conexão com o Google Drive não é solicitada automaticamente ao abrir o app.
+status('Para atualizar o backup, toque em “Sincronizar agora”.');
 async function request(url,options={}){
  if(!token)throw Error('Conecte ao Google Drive primeiro.');
  let r=await fetch(url,{...options,headers:{...(options.headers||{}),Authorization:'Bearer '+token}});
@@ -85,7 +86,14 @@ async function syncDrive(){
  render()
 }
 $('connectDrive').onclick=connect;
-$('syncDrive').onclick=async()=>{try{await syncDrive()}catch(e){status('Sincronização não concluída.');msg(e.message)}};
+$('syncDrive').onclick=async()=>{
+ if(!token){
+  try{getClient().requestAccessToken({prompt:''})}
+  catch(e){status('Não foi possível iniciar a conexão.');msg(e.message)}
+  return;
+ }
+ try{await syncDrive()}catch(e){status('Sincronização não concluída.');msg(e.message)}
+};
 $('save').onclick=()=>{let date=$('date').value,entry=$('entry').value,exit=$('exit').value;if(!date||!entry||!exit){msg('Preencha data, entrada e saída.');return}if(entry===exit){msg('Entrada e saída não podem ser iguais.');return}
  let r={date,entry,exit},i=records.findIndex(x=>x.date===date);if(i>=0)records[i]=r;else records.push(r);
  try{store();render();msg('Jornada salva neste aparelho. Para fazer backup, sincronize com o Google Drive.')}catch(e){msg('Não foi possível salvar neste navegador.')}
