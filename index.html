@@ -16,7 +16,7 @@
 </head><body><main>
 <h1>Meu Ponto</h1><p class="sub">Controle de jornada e banco de horas</p>
 <section class="card"><div class="stats"><div class="stat"><small>Saldo do banco</small><strong id="balance">0h 00min</strong></div><div class="stat"><small>Dias de folga disponíveis</small><strong id="days">0</strong></div></div><p class="muted">Jornada prevista: 8 horas líquidas por dia. O cálculo desconta automaticamente 1 hora de almoço.</p></section>
-<section class="card"><h2>Sincronização com Google Drive</h2><p id="driveStatus">Não conectado ao Google Drive.</p><button id="connectDrive">Conectar ao Google Drive</button><button class="secondary" id="syncDrive">Sincronizar agora</button><p class="muted">Conecte a mesma conta Google em cada aparelho e sincronize. Os registros também ficam salvos localmente no navegador. O acesso ao Drive é solicitado pelo Google; nenhum segredo OAuth fica neste código público.</p></section>
+<section class="card"><h2>Sincronização com Google Drive</h2><p id="driveStatus">Não conectado ao Google Drive.</p><button id="connectDrive">Conectar ao Google Drive</button><button class="secondary" id="syncDrive">Sincronizar agora</button><p class="muted">Conecte a mesma conta Google quando solicitado e toque em “Sincronizar agora” para atualizar o backup. Os registros também ficam salvos localmente no navegador. Por segurança, o Google pode pedir autorização novamente depois que o acesso expirar.</p></section>
 <section class="card"><h2>Registrar jornada</h2><label for="date">Data</label><input id="date" type="date"><label for="entry">Horário de entrada</label><input id="entry" type="time" value="08:00"><label for="exit">Horário de saída</label><input id="exit" type="time" value="17:00"><button id="save">Salvar jornada</button><p id="message" role="status"></p><p class="muted">Se salvar outra jornada na mesma data, o registro anterior será substituído.</p></section>
 <section class="card"><h2>Histórico</h2><div id="history"></div><button class="secondary" id="export">Exportar backup (.json)</button></section>
 </main>
@@ -53,11 +53,11 @@ function getClient(){
  return tokenClient
 }
 // Alteração: não força a tela de consentimento em toda conexão.
-function connect(){try{getClient().requestAccessToken()}catch(e){msg(e.message)}}
+function connect(){try{getClient().requestAccessToken({prompt:''})}catch(e){msg(e.message)}}
 // Ao abrir ou atualizar a página, tenta recuperar o acesso sem abrir a escolha de conta.
 // Se o Google exigir interação, o usuário poderá tocar no botão Conectar.
 // A conexão com o Google Drive não é solicitada automaticamente ao abrir o app.
-status('Para atualizar o backup, toque em “Sincronizar agora”.');
+status('Para sincronizar, toque em “Conectar ao Google Drive”. Depois, use “Sincronizar agora” para atualizar o backup.');
 async function request(url,options={}){
  if(!token)throw Error('Conecte ao Google Drive primeiro.');
  let r=await fetch(url,{...options,headers:{...(options.headers||{}),Authorization:'Bearer '+token}});
