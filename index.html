@@ -18,7 +18,7 @@
 <h1>Meu Ponto</h1><p class="sub">Controle de jornada e banco de horas</p>
 <section class="card"><div class="stats"><div class="stat"><small>Saldo do banco</small><strong id="balance">0h 00min</strong></div><div class="stat"><small>Dias de folga disponíveis</small><strong id="days">0</strong></div></div><p class="muted">Jornada prevista: 8 horas líquidas por dia. O cálculo desconta automaticamente 1 hora de almoço.</p></section>
 <section class="card"><h2>Sincronização com Google Drive</h2><p id="driveStatus">Não conectado ao Google Drive.</p><button id="connectDrive">Conectar ao Google Drive</button><button class="secondary" id="syncDrive">Sincronizar agora</button><p class="muted">Conecte a mesma conta Google quando solicitado e toque em “Sincronizar agora” para atualizar o backup. Os registros também ficam salvos localmente no navegador. Por segurança, o Google pode pedir autorização novamente depois que o acesso expirar.</p></section>
-<section class="card"><h2>Registrar jornada</h2><p id="clockNow" class="muted">Hora do celular: --:--</p><p id="pendingStatus">Nenhuma entrada registrada ainda.</p><button id="clockIn">Registrar entrada</button><button id="clockOut" class="secondary">Registrar saída</button><p id="message" role="status"></p><p class="muted">Os botões usam a data e a hora atuais do celular. A saída fecha a jornada e calcula o banco de horas, descontando 1 hora de almoço.</p></section>
+<section class="card"><h2>Registrar jornada</h2><p id="clockNow" class="muted">Hora do celular: --:--</p><p id="pendingStatus">Nenhuma entrada registrada ainda.</p><button id="clockIn">Registrar entrada</button><button id="clockOut" class="secondary">Registrar saída</button><button id="resolvePending" class="secondary">Resolver jornada em aberto</button><button id="addForgotten" class="secondary">Registrar jornada esquecida</button><p id="message" role="status"></p><p class="muted">Os botões usam a data e a hora atuais do celular. A saída fecha a jornada e calcula o banco de horas, descontando 1 hora de almoço.</p></section>
 <section class="card"><h2>Relatórios por período</h2>
 <label for="reportPreset">Período rápido</label><select id="reportPreset" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px"><option value="week">Últimos 7 dias</option><option value="fortnight">Últimos 15 dias</option><option value="month" selected>Este mês</option><option value="custom">Escolher datas</option></select>
 <div class="stats"><div><label for="reportStart">De</label><input id="reportStart" type="date"></div><div><label for="reportEnd">Até</label><input id="reportEnd" type="date"></div></div>
@@ -34,7 +34,7 @@ try{records=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(record
 let pending=null;try{pending=JSON.parse(localStorage.getItem(PENDING_KEY)||'null')}catch(e){pending=null}
 function localDate(d=new Date()){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 function localTime(d=new Date()){return [String(d.getHours()).padStart(2,'0'),String(d.getMinutes()).padStart(2,'0')].join(':')}
-function updateClock(){ $('clockNow').textContent='Hora do celular: '+localTime()+' — '+localDate().split('-').reverse().join('/'); $('pendingStatus').textContent=pending?('Entrada registrada em '+pending.date.split('-').reverse().join('/')+' às '+pending.entry+'. Ao terminar, toque em “Registrar saída”.'):'Nenhuma entrada registrada ainda.' }
+function updateClock(){ $('clockNow').textContent='Hora do celular: '+localTime()+' — '+localDate().split('-').reverse().join('/'); $('pendingStatus').textContent=pending?('Jornada em aberto: '+pending.date.split('-').reverse().join('/')+' | Entrada às '+pending.entry+'. Se esqueceu a saída, use “Resolver jornada em aberto”.'):'Nenhuma entrada registrada ainda.'; $('resolvePending').style.display=pending?'block':'none' }
 updateClock();
 function mins(t){let p=t.split(':').map(Number);return p[0]*60+p[1]}
 function fmt(n){let s=n<0?'-':'',a=Math.abs(n);return `${s}${Math.floor(a/60)}h ${String(a%60).padStart(2,'0')}min`}
@@ -51,6 +51,52 @@ function render(){
  let v=worked(r)-480,p=document.createElement('p');p.textContent=`Variação do dia: ${fmt(v)}`;p.className=v<0?'negative':'positive';el.appendChild(p);
  let edit=document.createElement('button');edit.className='secondary';edit.textContent='Corrigir horários';edit.onclick=()=>editRecord(r.date);el.appendChild(edit);
  let x=document.createElement('button');x.className='danger';x.textContent='Excluir';x.onclick=()=>{if(confirm(`Excluir a jornada de ${r.date}?`)){records=records.filter(a=>a.date!==r.date);store();render();msg('Registro excluído. Sincronize para atualizar o Drive.')}};el.appendChild(x);h.appendChild(el)})
+}
+
+function resolvePending(){
+ if(!pending){msg('Não há jornada em aberto para resolver.');return}
+ const valid=v=>/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(v);
+ const exit=prompt('Informe o horário de SAÍDA que ficou faltando para '+pending.date.split('-').reverse().join('/')+' (formato HH:MM):','17:00');
+ if(exit===null)return;
+ if(!valid(exit)||exit===pending.entry){alert('Horário inválido. Use HH:MM e informe um horário diferente da entrada.');return}
+ const r={date:pending.date,entry:pending.entry,exit};
+ const i=records.findIndex(x=>x.date===r.date);
+ if(i>=0&&!confirm('Já existe uma jornada completa em '+r.date.split('-').reverse().join('/')+'. Deseja substituí-la por '+r.entry+'–'+r.exit+'?'))return;
+ try{
+  if(i>=0)records[i]=r;else records.push(r);
+  store();
+  localStorage.removeItem(PENDING_KEY);
+  pending=null;
+  render();updateClock();makeReport();
+  msg('Jornada de '+r.date.split('-').reverse().join('/')+' finalizada com saída às '+exit+'. Agora você já pode registrar uma nova entrada. Sincronize para atualizar o Google Drive.');
+ }catch(e){msg('Não foi possível salvar a correção. A jornada em aberto foi mantida.');}
+}
+
+function addForgottenRecord(){
+ const rawDate=prompt('Informe a data da jornada esquecida no formato DD/MM/AAAA. Exemplo: 26/10/2026:');
+ if(rawDate===null)return;
+ const match=rawDate.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+ if(!match){alert('Data inválida. Use o formato DD/MM/AAAA.');return}
+ const day=Number(match[1]),month=Number(match[2]),year=Number(match[3]);
+ const dateObj=new Date(year,month-1,day);
+ if(dateObj.getFullYear()!==year||dateObj.getMonth()!==month-1||dateObj.getDate()!==day){alert('Essa data não é válida.');return}
+ const date=dateStr(dateObj);
+ if(date>localDate()){alert('Não é possível registrar uma jornada em uma data futura.');return}
+ const valid=v=>/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(v);
+ const entry=prompt('Informe o horário de ENTRADA (HH:MM):','08:00');if(entry===null)return;
+ const exit=prompt('Informe o horário de SAÍDA (HH:MM):','17:00');if(exit===null)return;
+ if(!valid(entry)||!valid(exit)||entry===exit){alert('Horários inválidos. Use HH:MM, por exemplo 08:00 e 17:00.');return}
+ const r={date,entry,exit};
+ const i=records.findIndex(x=>x.date===date);
+ if(i>=0&&!confirm('Já existe uma jornada registrada nessa data. Deseja substituí-la por '+entry+'–'+exit+'?'))return;
+ if(pending&&pending.date===date&&!confirm('Existe uma entrada incompleta nessa data. Deseja completar a jornada com os horários informados?'))return;
+ try{
+  if(i>=0)records[i]=r;else records.push(r);
+  store();
+  if(pending&&pending.date===date){localStorage.removeItem(PENDING_KEY);pending=null;updateClock()}
+  render();makeReport();
+  msg('Jornada de '+rawDate+' registrada: entrada às '+entry+' e saída às '+exit+'. O banco de horas foi recalculado. Sincronize com o Google Drive para atualizar o backup.');
+ }catch(e){msg('Não foi possível salvar a jornada. Seus registros anteriores foram mantidos.');}
 }
 
 function editRecord(date){
@@ -136,7 +182,7 @@ async function syncDrive(){
  if(file){
   driveFileId=file.id;let cloud=await request(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(file.id)}?alt=media`);
   let cloudRecords=Array.isArray(cloud)?cloud:(cloud.records||[]);if(!Array.isArray(cloudRecords))throw Error('O arquivo do Drive não contém jornadas válidas.');
-  let map=new Map(records.map(r=>[r.date,r]));cloudRecords.forEach(r=>{if(r&&r.date&&r.entry&&r.exit)map.set(r.date,r)});
+  let map=new Map(cloudRecords.filter(r=>r&&r.date&&r.entry&&r.exit).map(r=>[r.date,r]));records.forEach(r=>{if(r&&r.date&&r.entry&&r.exit)map.set(r.date,r)});
   records=[...map.values()].sort((a,b)=>a.date.localeCompare(b.date));store();await upload(file.id);status('Sincronização concluída. Dados locais e do Drive foram combinados.');msg('Sincronização com o Google Drive concluída.')
  }else{await upload(null);status('Backup criado no seu Google Drive.');msg('Primeiro backup criado no Google Drive.')}
  render()
@@ -150,6 +196,8 @@ $('syncDrive').onclick=async()=>{
  }
  try{await syncDrive()}catch(e){status('Sincronização não concluída.');msg(e.message)}
 };
+$('resolvePending').onclick=resolvePending;
+$('addForgotten').onclick=addForgottenRecord;
 $('clockIn').onclick=()=>{
  const now=new Date(),date=localDate(now),entry=localTime(now);
  if(pending){msg('Já existe uma entrada em aberto desde '+pending.date.split('-').reverse().join('/')+' às '+pending.entry+'. Registre a saída antes de iniciar outra jornada.');return}
