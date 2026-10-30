@@ -212,7 +212,7 @@ $('syncDrive').onclick=async()=>{
 $('resolvePending').onclick=resolvePending;
 function applyMask(input,kind){
  input.addEventListener('input',()=>{
-  const digits=input.value.replace(/\\D/g,'').slice(0,kind==='date'?8:4);
+  const digits=input.value.replace(/\D/g,'').slice(0,kind==='date'?8:4);
   if(kind==='date'){
    let value=digits;
    if(digits.length>2)value=digits.slice(0,2)+'/'+digits.slice(2);
@@ -230,13 +230,13 @@ $('saveForgotten').onclick=()=>{
  const rawDate=$('forgottenDate').value,entry=$('forgottenEntry').value,exit=$('forgottenExit').value;
  const feedback=$('forgottenMessage');
  if(!rawDate||!entry||!exit){feedback.textContent='Preencha a data, o horário de entrada e o horário de saída.';return}
- if(!/^\\d{2}\\/\\d{2}\\/\\d{4}$/.test(rawDate)){feedback.textContent='Data incompleta. Digite os 8 números no formato DDMMAAAA.';return}
+ if(!/^\d{2}\/\d{2}\/\d{4}$/.test(rawDate)){feedback.textContent='Data incompleta. Digite os 8 números no formato DDMMAAAA.';return}
  const [day,month,year]=rawDate.split('/').map(Number);
  const check=new Date(year,month-1,day);
  if(check.getFullYear()!==year||check.getMonth()!==month-1||check.getDate()!==day){feedback.textContent='A data informada não é válida.';return}
  const date=[year,String(month).padStart(2,'0'),String(day).padStart(2,'0')].join('-');
  if(date>localDate()){feedback.textContent='Não é possível registrar uma jornada em uma data futura.';return}
- const valid=v=>/^(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(v);
+ const valid=v=>/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(v);
  if(!valid(entry)||!valid(exit)||entry===exit){feedback.textContent='Horários inválidos. Digite 4 números para cada horário, por exemplo 0800 e 1700.';return}
  const record={date,entry,exit},index=records.findIndex(r=>r.date===date);
  if(index>=0&&!confirm('Já existe uma jornada em '+date.split('-').reverse().join('/')+'. Deseja substituí-la por '+entry+'–'+exit+'?'))return;
