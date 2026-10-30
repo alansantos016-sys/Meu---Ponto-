@@ -11,13 +11,19 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <style>
-*{box-sizing:border-box}body{margin:0;padding:20px;background:#101827;color:#f1f5f9;font-family:Arial,sans-serif}main{max-width:620px;margin:auto}h1{color:#60a5fa;margin-bottom:5px}.sub,.muted{color:#aab6c8}.card{background:#1c283a;border:1px solid #334155;border-radius:14px;padding:18px;margin:18px 0}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#101827;padding:14px;border-radius:10px}.stat small{display:block;color:#aab6c8}.stat strong{display:block;font-size:23px;margin-top:8px}label{display:block;margin:15px 0 7px}input{width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px}button{width:100%;border:0;border-radius:9px;padding:13px;margin-top:12px;background:#3b82f6;color:white;font-size:16px;font-weight:bold}button.secondary{background:#475569}button.danger{background:#991b1b;width:auto;padding:8px 12px}.record{border-top:1px solid #475569;padding:13px 0}.record p{margin:6px 0;color:#cbd5e1}.positive{color:#4ade80!important}.negative{color:#f87171!important}.muted{font-size:13px;line-height:1.45}#message{line-height:1.4;overflow-wrap:anywhere}
+*{box-sizing:border-box}body{margin:0;padding:20px;background:#101827;color:#f1f5f9;font-family:Arial,sans-serif}main{max-width:620px;margin:auto}h1{color:#60a5fa;margin-bottom:5px}.sub,.muted{color:#aab6c8}.card{background:#1c283a;border:1px solid #334155;border-radius:14px;padding:18px;margin:18px 0}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#101827;padding:14px;border-radius:10px}.stat small{display:block;color:#aab6c8}.stat strong{display:block;font-size:23px;margin-top:8px}label{display:block;margin:15px 0 7px}select{width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px}input{width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px}button{width:100%;border:0;border-radius:9px;padding:13px;margin-top:12px;background:#3b82f6;color:white;font-size:16px;font-weight:bold}button.secondary{background:#475569}button.danger{background:#991b1b;width:auto;padding:8px 12px}.record{border-top:1px solid #475569;padding:13px 0}.record p{margin:6px 0;color:#cbd5e1}.positive{color:#4ade80!important}.negative{color:#f87171!important}.muted{font-size:13px;line-height:1.45}#message{line-height:1.4;overflow-wrap:anywhere}
+@media print{body{background:white;color:#111;padding:0}body *{visibility:hidden}#reportOutput,#reportOutput *{visibility:visible}#reportOutput{position:absolute;left:0;top:0;width:100%;color:#111}.card{border:0;background:white;padding:0;margin:0}#reportOutput p{color:#111!important}button,select,input{display:none!important}}
 </style><script src="https://accounts.google.com/gsi/client" async defer></script>
 </head><body><main>
 <h1>Meu Ponto</h1><p class="sub">Controle de jornada e banco de horas</p>
 <section class="card"><div class="stats"><div class="stat"><small>Saldo do banco</small><strong id="balance">0h 00min</strong></div><div class="stat"><small>Dias de folga disponíveis</small><strong id="days">0</strong></div></div><p class="muted">Jornada prevista: 8 horas líquidas por dia. O cálculo desconta automaticamente 1 hora de almoço.</p></section>
 <section class="card"><h2>Sincronização com Google Drive</h2><p id="driveStatus">Não conectado ao Google Drive.</p><button id="connectDrive">Conectar ao Google Drive</button><button class="secondary" id="syncDrive">Sincronizar agora</button><p class="muted">Conecte a mesma conta Google quando solicitado e toque em “Sincronizar agora” para atualizar o backup. Os registros também ficam salvos localmente no navegador. Por segurança, o Google pode pedir autorização novamente depois que o acesso expirar.</p></section>
 <section class="card"><h2>Registrar jornada</h2><p id="clockNow" class="muted">Hora do celular: --:--</p><p id="pendingStatus">Nenhuma entrada registrada ainda.</p><button id="clockIn">Registrar entrada</button><button id="clockOut" class="secondary">Registrar saída</button><p id="message" role="status"></p><p class="muted">Os botões usam a data e a hora atuais do celular. A saída fecha a jornada e calcula o banco de horas, descontando 1 hora de almoço.</p></section>
+<section class="card"><h2>Relatórios por período</h2>
+<label for="reportPreset">Período rápido</label><select id="reportPreset" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px"><option value="week">Últimos 7 dias</option><option value="fortnight">Últimos 15 dias</option><option value="month" selected>Este mês</option><option value="custom">Escolher datas</option></select>
+<div class="stats"><div><label for="reportStart">De</label><input id="reportStart" type="date"></div><div><label for="reportEnd">Até</label><input id="reportEnd" type="date"></div></div>
+<button id="makeReport">Gerar relatório</button><button class="secondary" id="downloadReport">Baixar relatório CSV</button><button class="secondary" id="printReport">Imprimir / salvar em PDF</button>
+<div id="reportOutput"></div><p class="muted">O relatório considera jornadas completas registradas no período selecionado. O saldo do banco geral e os dias de folga disponíveis são mostrados separadamente.</p></section>
 <section class="card"><h2>Histórico</h2><div id="history"></div><button class="secondary" id="export">Exportar backup (.json)</button></section>
 </main>
 <script>
@@ -43,8 +49,54 @@ function render(){
  let t=document.createElement('p');t.textContent=`Entrada: ${r.entry} | Saída: ${r.exit}`;el.appendChild(t);
  let w=document.createElement('p');w.textContent=`Trabalhado: ${fmt(worked(r))}`;el.appendChild(w);
  let v=worked(r)-480,p=document.createElement('p');p.textContent=`Variação do dia: ${fmt(v)}`;p.className=v<0?'negative':'positive';el.appendChild(p);
+ let edit=document.createElement('button');edit.className='secondary';edit.textContent='Corrigir horários';edit.onclick=()=>editRecord(r.date);el.appendChild(edit);
  let x=document.createElement('button');x.className='danger';x.textContent='Excluir';x.onclick=()=>{if(confirm(`Excluir a jornada de ${r.date}?`)){records=records.filter(a=>a.date!==r.date);store();render();msg('Registro excluído. Sincronize para atualizar o Drive.')}};el.appendChild(x);h.appendChild(el)})
 }
+
+function editRecord(date){
+ const r=records.find(x=>x.date===date);if(!r)return;
+ const entry=prompt('Corrigir horário de ENTRADA (formato HH:MM):',r.entry);if(entry===null)return;
+ const exit=prompt('Corrigir horário de SAÍDA (formato HH:MM):',r.exit);if(exit===null)return;
+ const valid=v=>/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(v);
+ if(!valid(entry)||!valid(exit)||entry===exit){alert('Horários inválidos. Use HH:MM, por exemplo 08:00 e 17:00.');return}
+ r.entry=entry;r.exit=exit;store();render();msg('Horários corrigidos. Toque em “Sincronizar agora” para atualizar o Drive.');makeReport();
+}
+function dateStr(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function setReportDates(){
+ const preset=$('reportPreset').value,now=new Date(),end=new Date(now.getFullYear(),now.getMonth(),now.getDate());let start=new Date(end);
+ if(preset==='week')start.setDate(start.getDate()-6);
+ else if(preset==='fortnight')start.setDate(start.getDate()-14);
+ else if(preset==='month')start=new Date(now.getFullYear(),now.getMonth(),1);
+ $('reportStart').value=dateStr(start);$('reportEnd').value=dateStr(end);
+}
+function getReportRecords(){
+ const start=$('reportStart').value,end=$('reportEnd').value;
+ if(!start||!end||start>end){alert('Escolha um período válido.');return null}
+ return records.filter(r=>r.date>=start&&r.date<=end).sort((a,b)=>a.date.localeCompare(b.date));
+}
+function makeReport(){
+ const rows=getReportRecords();if(!rows)return;
+ const total=rows.reduce((n,r)=>n+worked(r),0),variation=rows.reduce((n,r)=>n+worked(r)-480,0);
+ const extra=rows.reduce((n,r)=>n+Math.max(0,worked(r)-480),0),deficit=rows.reduce((n,r)=>n+Math.max(0,480-worked(r)),0);
+ const out=$('reportOutput');out.replaceChildren();
+ const p=document.createElement('p');p.innerHTML='<strong>Resumo do período</strong>';out.appendChild(p);
+ const summary=document.createElement('p');summary.textContent=`Jornadas: ${rows.length} | Horas trabalhadas: ${fmt(total)} | Horas acima da meta: ${fmt(extra)} | Déficit: ${fmt(deficit)} | Saldo líquido do período: ${fmt(variation)} | Banco total atual: ${fmt(balance())} | Folgas disponíveis: ${Math.floor(Math.max(0,balance())/480)}`;out.appendChild(summary);
+ const table=document.createElement('div');
+ rows.forEach(r=>{const line=document.createElement('p');line.textContent=`${r.date.split('-').reverse().join('/')} — Entrada ${r.entry} — Saída ${r.exit} — Trabalhado ${fmt(worked(r))} — Variação ${fmt(worked(r)-480)}`;table.appendChild(line)});
+ if(!rows.length){const empty=document.createElement('p');empty.textContent='Nenhuma jornada completa encontrada neste período.';table.appendChild(empty)}
+ out.appendChild(table);
+}
+function reportCsv(){
+ const rows=getReportRecords();if(!rows)return;
+ const header=['Data','Entrada','Saída','Horas trabalhadas','Variação do dia'];
+ const lines=[header,...rows.map(r=>[r.date,r.entry,r.exit,fmt(worked(r)),fmt(worked(r)-480)])];
+ lines.push([]);
+ lines.push(['Saldo total atual',fmt(balance())]);
+ lines.push(['Dias de folga disponíveis',String(Math.floor(Math.max(0,balance())/480))]);
+ const csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`relatorio-meu-ponto-${$('reportStart').value}-a-${$('reportEnd').value}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
 function msg(s){$('message').textContent=s}
 function status(s){$('driveStatus').textContent=s}
 function getClient(){
@@ -115,8 +167,13 @@ $('clockOut').onclick=()=>{
  if(i>=0)records[i]=r;else records.push(r);
  try{store();localStorage.removeItem(PENDING_KEY);pending=null;render();updateClock();msg('Saída registrada às '+exit+'. Jornada salva neste aparelho. Toque em “Sincronizar agora” para atualizar o Google Drive.')}catch(e){msg('Não foi possível salvar a jornada. A entrada pendente foi mantida.');}
 };
+$('reportPreset').onchange=()=>{const p=$('reportPreset').value;if(p!=='custom')setReportDates();makeReport()};
+$('makeReport').onclick=makeReport;
+$('downloadReport').onclick=reportCsv;
+$('printReport').onclick=()=>{makeReport();window.print()};
+setReportDates();
 $('export').onclick=()=>{let blob=new Blob([JSON.stringify({version:1,records},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='meu-ponto-backup.json';a.click();URL.revokeObjectURL(url)};
-render()
+render();makeReport()
 })();
 </script>
 <script>

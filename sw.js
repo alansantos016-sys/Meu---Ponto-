@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-ponto-shell-v4';
+const CACHE_NAME = 'meu-ponto-shell-v5';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
