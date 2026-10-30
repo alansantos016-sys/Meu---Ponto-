@@ -18,7 +18,19 @@
 <h1>Meu Ponto</h1><p class="sub">Controle de jornada e banco de horas</p>
 <section class="card"><div class="stats"><div class="stat"><small>Saldo do banco</small><strong id="balance">0h 00min</strong></div><div class="stat"><small>Dias de folga disponíveis</small><strong id="days">0</strong></div></div><p class="muted">Jornada prevista: 8 horas líquidas por dia. O cálculo desconta automaticamente 1 hora de almoço.</p></section>
 <section class="card"><h2>Sincronização com Google Drive</h2><p id="driveStatus">Não conectado ao Google Drive.</p><button id="connectDrive">Conectar ao Google Drive</button><button class="secondary" id="syncDrive">Sincronizar agora</button><p class="muted">Conecte a mesma conta Google quando solicitado e toque em “Sincronizar agora” para atualizar o backup. Os registros também ficam salvos localmente no navegador. Por segurança, o Google pode pedir autorização novamente depois que o acesso expirar.</p></section>
-<section class="card"><h2>Registrar jornada</h2><p id="clockNow" class="muted">Hora do celular: --:--</p><p id="pendingStatus">Nenhuma entrada registrada ainda.</p><button id="clockIn">Registrar entrada</button><button id="clockOut" class="secondary">Registrar saída</button><button id="resolvePending" class="secondary">Resolver jornada em aberto</button><button id="addForgotten" class="secondary">Registrar jornada esquecida</button><p id="message" role="status"></p><p class="muted">Os botões usam a data e a hora atuais do celular. A saída fecha a jornada e calcula o banco de horas, descontando 1 hora de almoço.</p></section>
+<section class="card"><h2>Registrar jornada</h2><p id="clockNow" class="muted">Hora do celular: --:--</p><p id="pendingStatus">Nenhuma entrada registrada ainda.</p><button id="clockIn">Registrar entrada</button><button id="clockOut" class="secondary">Registrar saída</button><button id="resolvePending" class="secondary">Resolver jornada em aberto</button><p id="message" role="status"></p><p class="muted">Os botões usam a data e a hora atuais do celular. A saída fecha a jornada e calcula o banco de horas, descontando 1 hora de almoço.</p></section>
+<section class="card" id="forgottenSection">
+<h2>Registrar jornada esquecida</h2>
+<p class="muted">Use esta seção quando não registrou a entrada e a saída no dia correto. Escolha a data e informe os dois horários. O banco de horas e os relatórios serão recalculados automaticamente.</p>
+<label for="forgottenDate">Data da jornada</label>
+<input id="forgottenDate" type="date">
+<div class="stats">
+<div><label for="forgottenEntry">Horário de entrada</label><input id="forgottenEntry" type="time" value="08:00"></div>
+<div><label for="forgottenExit">Horário de saída</label><input id="forgottenExit" type="time" value="17:00"></div>
+</div>
+<button id="saveForgotten">Salvar jornada esquecida</button>
+<p id="forgottenMessage" role="status"></p>
+</section>
 <section class="card"><h2>Relatórios por período</h2>
 <label for="reportPreset">Período rápido</label><select id="reportPreset" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px"><option value="week">Últimos 7 dias</option><option value="fortnight">Últimos 15 dias</option><option value="month" selected>Este mês</option><option value="custom">Escolher datas</option></select>
 <div class="stats"><div><label for="reportStart">De</label><input id="reportStart" type="date"></div><div><label for="reportEnd">Até</label><input id="reportEnd" type="date"></div></div>
@@ -197,7 +209,27 @@ $('syncDrive').onclick=async()=>{
  try{await syncDrive()}catch(e){status('Sincronização não concluída.');msg(e.message)}
 };
 $('resolvePending').onclick=resolvePending;
-$('addForgotten').onclick=addForgottenRecord;
+$('saveForgotten').onclick=()=>{
+ const date=$('forgottenDate').value,entry=$('forgottenEntry').value,exit=$('forgottenExit').value;
+ const feedback=$('forgottenMessage');
+ if(!date||!entry||!exit){feedback.textContent='Preencha a data, o horário de entrada e o horário de saída.';return}
+ const parts=date.split('-').map(Number),check=new Date(parts[0],parts[1]-1,parts[2]);
+ if(check.getFullYear()!==parts[0]||check.getMonth()!==parts[1]-1||check.getDate()!==parts[2]){feedback.textContent='A data informada não é válida.';return}
+ if(date>localDate()){feedback.textContent='Não é possível registrar uma jornada em uma data futura.';return}
+ const valid=v=>/^(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(v);
+ if(!valid(entry)||!valid(exit)||entry===exit){feedback.textContent='Horários inválidos. Confira os campos de entrada e saída.';return}
+ const record={date,entry,exit},index=records.findIndex(r=>r.date===date);
+ if(index>=0&&!confirm('Já existe uma jornada em '+date.split('-').reverse().join('/')+'. Deseja substituí-la por '+entry+'–'+exit+'?'))return;
+ if(pending&&pending.date===date&&!confirm('Existe uma entrada incompleta nessa data. Deseja substituí-la pelos dois horários informados?'))return;
+ try{
+  if(index>=0)records[index]=record;else records.push(record);
+  store();
+  if(pending&&pending.date===date){localStorage.removeItem(PENDING_KEY);pending=null;updateClock()}
+  render();makeReport();
+  feedback.textContent='Jornada de '+date.split('-').reverse().join('/')+' salva: entrada '+entry+' e saída '+exit+'. Banco de horas e relatórios recalculados. Sincronize com o Google Drive para atualizar o backup.';
+  msg('Jornada retroativa salva. Sincronize com o Google Drive para atualizar o backup.');
+ }catch(e){feedback.textContent='Não foi possível salvar. Os registros anteriores foram mantidos.'}
+};
 $('clockIn').onclick=()=>{
  const now=new Date(),date=localDate(now),entry=localTime(now);
  if(pending){msg('Já existe uma entrada em aberto desde '+pending.date.split('-').reverse().join('/')+' às '+pending.entry+'. Registre a saída antes de iniciar outra jornada.');return}
