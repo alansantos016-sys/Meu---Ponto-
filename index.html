@@ -12,11 +12,23 @@
 
 <style>
 *{box-sizing:border-box}body{margin:0;padding:20px;background:#101827;color:#f1f5f9;font-family:Arial,sans-serif}main{max-width:620px;margin:auto}h1{color:#60a5fa;margin-bottom:5px}.sub,.muted{color:#aab6c8}.card{background:#1c283a;border:1px solid #334155;border-radius:14px;padding:18px;margin:18px 0}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#101827;padding:14px;border-radius:10px}.stat small{display:block;color:#aab6c8}.stat strong{display:block;font-size:23px;margin-top:8px}label{display:block;margin:15px 0 7px}select{width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px}input{width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px}button{width:100%;border:0;border-radius:9px;padding:13px;margin-top:12px;background:#3b82f6;color:white;font-size:16px;font-weight:bold}button.secondary{background:#475569}button.danger{background:#991b1b;width:auto;padding:8px 12px}.record{border-top:1px solid #475569;padding:13px 0}.record p{margin:6px 0;color:#cbd5e1}.positive{color:#4ade80!important}.negative{color:#f87171!important}.muted{font-size:13px;line-height:1.45}#message{line-height:1.4;overflow-wrap:anywhere}
+.app-tabs{display:flex;gap:7px;position:sticky;top:0;z-index:10;background:#101827;padding:9px 0 11px;margin:10px 0 12px;overflow-x:auto}
+.tab-button{flex:1;min-width:max-content;width:auto;margin:0;padding:10px 12px;background:#263449;color:#cbd5e1;border:1px solid #334155;border-radius:10px;font-size:14px}
+.tab-button.active{background:#3b82f6;color:#fff;border-color:#60a5fa}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
 @media print{body{background:white;color:#111;padding:0}body *{visibility:hidden}#reportOutput,#reportOutput *{visibility:visible}#reportOutput{position:absolute;left:0;top:0;width:100%;color:#111}.card{border:0;background:white;padding:0;margin:0}#reportOutput p{color:#111!important}button,select,input{display:none!important}}
 </style><script src="https://accounts.google.com/gsi/client" async defer></script>
 </head><body><main>
 <h1>Meu Ponto</h1><p class="sub">Controle de jornada e banco de horas</p>
-<section class="card"><div class="stats"><div class="stat"><small>Saldo do banco</small><strong id="balance">0h 00min</strong></div><div class="stat"><small>Dias de folga disponíveis</small><strong id="days">0</strong></div></div><p class="muted">Jornada prevista: 8 horas líquidas por dia. O cálculo desconta automaticamente 1 hora de almoço.</p></section>
+<nav class="app-tabs" aria-label="Seções do aplicativo">
+<button type="button" class="tab-button active" data-tab="saldo">Saldo</button>
+<button type="button" class="tab-button" data-tab="jornada">Jornada</button>
+<button type="button" class="tab-button" data-tab="relatorios">Relatórios</button>
+<button type="button" class="tab-button" data-tab="drive">Google Drive</button>
+</nav>
+<div class="tab-panel active" id="tab-saldo"><section class="card"><div class="stats"><div class="stat"><small>Saldo do banco</small><strong id="balance">0h 00min</strong></div><div class="stat"><small>Dias de folga disponíveis</small><strong id="days">0</strong></div></div><p class="muted">Jornada prevista: 8 horas líquidas por dia. O cálculo desconta automaticamente 1 hora de almoço.</p></section>
 <section class="card" id="monthlyBalances">
 <h2>Saldo por mês</h2>
 <label for="balanceMonth">Consultar mês</label><input id="balanceMonth" type="month">
@@ -35,8 +47,8 @@
 <p id="leaveUseMessage" role="status"></p>
 <div id="leaveUseHistory"></div>
 </section>
-<section class="card"><h2>Sincronização com Google Drive</h2><p id="driveStatus">Não conectado ao Google Drive.</p><button id="connectDrive">Conectar ao Google Drive</button><button class="secondary" id="syncDrive">Sincronizar agora</button><p class="muted">Conecte a mesma conta Google quando solicitado e toque em “Sincronizar agora” para atualizar o backup. Os registros também ficam salvos localmente no navegador. Por segurança, o Google pode pedir autorização novamente depois que o acesso expirar.</p></section>
-<section class="card"><h2>Registrar jornada</h2><p id="clockNow" class="muted">Hora do celular: --:--</p><p id="pendingStatus">Nenhuma entrada registrada ainda.</p><button id="clockIn">Registrar entrada</button><button id="clockOut" class="secondary">Registrar saída</button><button id="resolvePending" class="secondary">Resolver jornada em aberto</button><p id="message" role="status"></p><p class="muted">Os botões usam a data e a hora atuais do celular. A saída fecha a jornada e calcula o banco de horas, descontando 1 hora de almoço.</p></section>
+</div><div class="tab-panel" id="tab-drive"><section class="card"><h2>Sincronização com Google Drive</h2><p id="driveStatus">Não conectado ao Google Drive.</p><button id="connectDrive">Conectar ao Google Drive</button><button class="secondary" id="syncDrive">Sincronizar agora</button><p class="muted">Conecte a mesma conta Google quando solicitado e toque em “Sincronizar agora” para atualizar o backup. Os registros também ficam salvos localmente no navegador. Por segurança, o Google pode pedir autorização novamente depois que o acesso expirar.</p></section>
+</div><div class="tab-panel" id="tab-jornada"><section class="card"><h2>Registrar jornada</h2><p id="clockNow" class="muted">Hora do celular: --:--</p><p id="pendingStatus">Nenhuma entrada registrada ainda.</p><button id="clockIn">Registrar entrada</button><button id="clockOut" class="secondary">Registrar saída</button><button id="resolvePending" class="secondary">Resolver jornada em aberto</button><p id="message" role="status"></p><p class="muted">Os botões usam a data e a hora atuais do celular. A saída fecha a jornada e calcula o banco de horas, descontando 1 hora de almoço.</p></section>
 <section class="card" id="forgottenSection">
 <h2>Registrar jornada esquecida</h2>
 <p class="muted">Use esta seção quando não registrou a entrada e a saída no dia correto. Escolha a data e informe os dois horários. O banco de horas e os relatórios serão recalculados automaticamente.</p>
@@ -50,17 +62,25 @@
 <button id="saveForgotten">Salvar jornada esquecida</button>
 <p id="forgottenMessage" role="status"></p>
 </section>
-<section class="card"><h2>Relatórios por período</h2>
+</div><div class="tab-panel" id="tab-relatorios"><section class="card"><h2>Relatórios por período</h2>
 <label for="reportPreset">Período rápido</label><select id="reportPreset" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px"><option value="week">Últimos 7 dias</option><option value="fortnight">Últimos 15 dias</option><option value="month" selected>Este mês</option><option value="custom">Escolher datas</option></select>
 <div class="stats"><div><label for="reportStart">De</label><input id="reportStart" type="date"></div><div><label for="reportEnd">Até</label><input id="reportEnd" type="date"></div></div>
 <button id="makeReport">Gerar relatório</button><button class="secondary" id="downloadReport">Baixar relatório CSV</button><button class="secondary" id="printReport">Imprimir / salvar em PDF</button>
 <div id="reportOutput"></div><p class="muted">O relatório considera jornadas completas registradas no período selecionado. O saldo do banco geral e os dias de folga disponíveis são mostrados separadamente.</p></section>
 <section class="card"><h2>Histórico</h2><div id="history"></div><button class="secondary" id="export">Exportar backup (.json)</button></section>
+</div>
 </main>
 <script>
 (()=>{'use strict';
 const CLIENT_ID='37942245083-122eh9crtamuhgcnql93m6bjg9indqf4.apps.googleusercontent.com',KEY='meuPontoRegistrosV1',PENDING_KEY='meuPontoEntradaPendenteV1',LEAVE_KEY='meuPontoFolgasUtilizadasV1',FILE='meu-ponto-dados.json',SCOPE='https://www.googleapis.com/auth/drive.file';
 const $=id=>document.getElementById(id);let records=[],leaveUses=[],token=null,tokenClient=null,driveFileId=null;
+document.querySelectorAll('.tab-button').forEach(button=>button.addEventListener('click',()=>{
+ const name=button.dataset.tab;
+ document.querySelectorAll('.tab-button').forEach(b=>b.classList.toggle('active',b===button));
+ document.querySelectorAll('.tab-panel').forEach(panel=>panel.classList.toggle('active',panel.id==='tab-'+name));
+ window.scrollTo({top:0,behavior:'smooth'});
+}));
+
 try{records=JSON.parse(localStorage.getItem(KEY)||'[]');if(!Array.isArray(records))records=[]}catch(e){records=[]}
 try{leaveUses=JSON.parse(localStorage.getItem(LEAVE_KEY)||'[]');if(!Array.isArray(leaveUses))leaveUses=[]}catch(e){leaveUses=[]}
 let pending=null;try{pending=JSON.parse(localStorage.getItem(PENDING_KEY)||'null')}catch(e){pending=null}
