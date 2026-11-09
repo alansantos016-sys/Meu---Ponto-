@@ -176,11 +176,9 @@ function reportCsv(){
  lines.push([]);
  lines.push(['Saldo total atual',fmt(balance())]);
  lines.push(['Dias de folga disponíveis',String(Math.floor(Math.max(0,balance())/480))]);
- const csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r
-');
- const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`relatorio-meu-ponto-${$('reportStart').value}-a-${$('reportEnd').value}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ const csv='\ufeff'+lines.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='relatorio-meu-ponto-'+$('reportStart').value+'-a-'+$('reportEnd').value+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-
 function msg(s){$('message').textContent=s}
 function status(s){$('driveStatus').textContent=s}
 function getClient(){
@@ -210,16 +208,8 @@ async function findFile(){
 }
 async function upload(fileId){
  let boundary='----MeuPontoBoundary'+Date.now(),meta={name:FILE,mimeType:'application/json'},data={version:2,updatedAt:new Date().toISOString(),records,leaveUses};
- let body='--'+boundary+'\\r\
-Content-Type: application/json; charset=UTF-8\\r\
-\\r\
-'+JSON.stringify(meta)+'\\r\
---'+boundary+'\\r\
-Content-Type: application/json; charset=UTF-8\\r\
-\\r\
-'+JSON.stringify(data)+'\\r\
---'+boundary+'--';
- let url=fileId?`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(fileId)}?uploadType=multipart`:'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+ let body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+'\r\n--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(data)+'\r\n--'+boundary+'--';
+ let url=fileId?'https://www.googleapis.com/upload/drive/v3/files/'+encodeURIComponent(fileId)+'?uploadType=multipart':'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
  let result=await request(url,{method:fileId?'PATCH':'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body});driveFileId=result.id||fileId
 }
 async function syncDrive(){
