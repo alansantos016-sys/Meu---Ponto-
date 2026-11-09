@@ -62,12 +62,13 @@
 <button id="saveForgotten">Salvar jornada esquecida</button>
 <p id="forgottenMessage" role="status"></p>
 </section>
+<section class="card"><h2>Histórico</h2><div id="history"></div><button class="secondary" id="export">Exportar backup (.json)</button></section>
 </div><div class="tab-panel" id="tab-relatorios"><section class="card"><h2>Relatórios por período</h2>
 <label for="reportPreset">Período rápido</label><select id="reportPreset" style="width:100%;padding:12px;border-radius:8px;border:1px solid #475569;background:#101827;color:white;font-size:16px"><option value="week">Últimos 7 dias</option><option value="fortnight">Últimos 15 dias</option><option value="month" selected>Este mês</option><option value="custom">Escolher datas</option></select>
 <div class="stats"><div><label for="reportStart">De</label><input id="reportStart" type="date"></div><div><label for="reportEnd">Até</label><input id="reportEnd" type="date"></div></div>
 <button id="makeReport">Gerar relatório</button><button class="secondary" id="downloadReport">Baixar relatório CSV</button><button class="secondary" id="printReport">Imprimir / salvar em PDF</button>
 <div id="reportOutput"></div><p class="muted">O relatório considera jornadas completas registradas no período selecionado. O saldo do banco geral e os dias de folga disponíveis são mostrados separadamente.</p></section>
-<section class="card"><h2>Histórico</h2><div id="history"></div><button class="secondary" id="export">Exportar backup (.json)</button></section>
+
 </div>
 </main>
 <script>
